@@ -22,8 +22,6 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
         private string BaseURL => GetBaseURL(Settings);
 
-        private const string PendingImportMessage = "The author and requested book are being prepared by the metadata server. Chaptarr saved your request and will add it automatically when it becomes available.";
-
         public ChaptarrClientV1(IHttpClientFactory httpClientFactory, ILogger<ChaptarrClient> logger, ChaptarrSettingsProvider settingsProvider)
         {
             _httpClientFactory = httpClientFactory;
@@ -83,14 +81,14 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         {
             try
             {
-                string term = Uri.EscapeDataString(searchTerm.Trim());
-                HttpResponseMessage response = await HttpGetAsync($"{BaseURL}/book/lookup?term={term}");
-                await response.ThrowIfNotSuccessfulAsync("ChaptarrBookLookup failed", x => x.error);
+                List<JSONBook> jsonBooks = await LookupAsync(searchTerm.Trim(), null);
 
-                string jsonResponse = await response.Content.ReadAsStringAsync();
-                List<JSONBook> jsonBooks = JsonConvert.DeserializeObject<List<JSONBook>>(jsonResponse);
-
-                return MergeBooks(jsonBooks.Where(x => x != null).Select(x => ConvertToBook(x)));
+                // Free-text rows carry no reliable media type, so formats are resolved by id once a book is picked.
+                return jsonBooks
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.ForeignBookId))
+                    .GroupBy(x => x.ForeignBookId)
+                    .Select(g => ConvertToBook(g.First()))
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -105,17 +103,46 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         {
             try
             {
-                string term = Uri.EscapeDataString(foreignBookId.Trim());
-                HttpResponseMessage response = await HttpGetAsync($"{BaseURL}/book/lookup?term={term}");
-                await response.ThrowIfNotSuccessfulAsync("ChaptarrBookLookup failed", x => x.error);
+                string id = foreignBookId.Trim();
+                Book book = null;
 
-                string jsonResponse = await response.Content.ReadAsStringAsync();
-                List<JSONBook> jsonBooks = JsonConvert.DeserializeObject<List<JSONBook>>(jsonResponse);
+                foreach (BookFormat format in new[] { BookFormat.Audiobook, BookFormat.Ebook })
+                {
+                    List<JSONBook> rows = (await LookupAsync(id, format == BookFormat.Audiobook ? "audiobook" : "ebook"))
+                        .Where(x => x != null && !string.IsNullOrWhiteSpace(x.ForeignBookId))
+                        .ToList();
 
-                IReadOnlyList<Book> books = MergeBooks(jsonBooks.Where(x => x != null).Select(x => ConvertToBook(x)));
+                    // Chaptarr matches local edition ids before work ids, so a row whose edition (not work) carries
+                    // the requested id is a different book.
+                    rows = rows
+                        .Where(x => x.ForeignBookId == id || x.Editions == null || !x.Editions.Any(e => e?.ForeignEditionId == id))
+                        .ToList();
 
-                if (books.Any())
-                    return books.First();
+                    JSONBook row = rows.FirstOrDefault(x => x.ForeignBookId == id) ?? rows.FirstOrDefault();
+
+                    if (row == null)
+                        continue;
+
+                    if (book == null)
+                    {
+                        book = ConvertToBook(row);
+                        book.ForeignBookId = id;
+                    }
+                    else
+                    {
+                        book.AudiobookInLibrary |= row.LocalAudiobookBooks != null && row.LocalAudiobookBooks.Any();
+                        book.EbookInLibrary |= row.LocalEbookBooks != null && row.LocalEbookBooks.Any();
+                    }
+
+                    book.AvailableFormats.Add(format);
+                    book.FormatIds[format] = new BookImportIds
+                    {
+                        ForeignBookId = row.ForeignBookId,
+                        ForeignAuthorId = row.Author?.ForeignAuthorId
+                    };
+                }
+
+                return book;
             }
             catch (Exception ex)
             {
@@ -130,14 +157,19 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         {
             try
             {
+                if (!book.FormatIds.TryGetValue(format, out BookImportIds ids))
+                {
+                    return new BookRequestResult { WasSuccess = false, Error = "Chaptarr has no edition of this book in the requested format." };
+                }
+
                 var importBody = new Dictionary<string, object>
                 {
-                    ["foreignBookId"] = book.ForeignBookId,
-                    ["foreignAuthorId"] = book.ForeignAuthorId,
+                    ["foreignBookId"] = ids.ForeignBookId,
+                    ["foreignAuthorId"] = ids.ForeignAuthorId,
                     ["mediaType"] = format == BookFormat.Audiobook ? "audiobook" : "ebook",
                     ["authorMonitoring"] = new Dictionary<string, object>
                     {
-                        ["monitor"] = format == BookFormat.Audiobook ? "audiobooks" : "ebooks",
+                        ["monitor"] = "specificBook",
                         ["searchForMissing"] = Settings.SearchNewRequests
                     }
                 };
@@ -149,14 +181,8 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
                 HttpResponseMessage response = await HttpPostAsync($"{BaseURL}/book/import", JsonConvert.SerializeObject(importBody));
 
-                if (response.StatusCode == HttpStatusCode.Accepted)
-                {
-                    return new BookRequestResult { WasSuccess = true, WasPending = true };
-                }
-
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    string conflictBody = await response.Content.ReadAsStringAsync();
                     return new BookRequestResult { WasSuccess = false, Error = "That book matches several providers on Chaptarr; ask the admin to disambiguate it." };
                 }
 
@@ -164,28 +190,13 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                 {
                     string errorBody = await response.Content.ReadAsStringAsync();
 
+                    // Chaptarr saves the request and adds it later when the metadata server is still preparing it.
                     if (errorBody.Contains("being prepared by the metadata server"))
                     {
                         return new BookRequestResult { WasSuccess = true, WasPending = true };
                     }
 
-                    string error = null;
-
-                    try
-                    {
-                        dynamic jsonError = JObject.Parse(errorBody);
-                        error = (string)jsonError.error;
-
-                        if (error == null && jsonError.modelState != null)
-                        {
-                            error = errorBody;
-                        }
-                    }
-                    catch
-                    {
-                        error = errorBody;
-                    }
-
+                    string error = ParseErrorMessage(errorBody);
                     _logger.LogWarning($"Chaptarr rejected the book import for \"{book.Title}\": {error}");
                     return new BookRequestResult { WasSuccess = false, Error = error };
                 }
@@ -202,39 +213,59 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         }
 
 
-        private static IReadOnlyList<Book> MergeBooks(IEnumerable<Book> books)
+        private async Task<List<JSONBook>> LookupAsync(string term, string mediaType)
         {
-            // Chaptarr returns one row per media type per work; merge them into one entry per work.
-            return books
-                .GroupBy(x => x.ForeignBookId)
-                .Select(g =>
-                {
-                    Book merged = g.First();
+            string url = $"{BaseURL}/book/lookup?term={Uri.EscapeDataString(term)}";
 
-                    foreach (Book other in g.Skip(1))
-                    {
-                        foreach (BookFormat fmt in other.AvailableFormats)
-                        {
-                            if (!merged.AvailableFormats.Contains(fmt))
-                                merged.AvailableFormats.Add(fmt);
-                        }
+            if (mediaType != null)
+                url += $"&mediaType={mediaType}";
 
-                        merged.AudiobookInLibrary |= other.AudiobookInLibrary;
-                        merged.EbookInLibrary |= other.EbookInLibrary;
+            HttpResponseMessage response = await HttpGetAsync(url);
+            await response.ThrowIfNotSuccessfulAsync("ChaptarrBookLookup failed", x => x.error);
 
-                        if (string.IsNullOrEmpty(merged.MediaType) && !string.IsNullOrEmpty(other.MediaType))
-                            merged.MediaType = other.MediaType;
-                    }
-
-                    return merged;
-                })
-                .ToList();
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<JSONBook>>(jsonResponse) ?? new List<JSONBook>();
         }
 
 
-        private Book ConvertToBook(JSONBook jsonBook)
+        /// <summary>
+        /// Chaptarr returns validation errors as [{propertyName, errorMessage}] and other errors as {error|message}.
+        /// </summary>
+        private static string ParseErrorMessage(string body)
         {
-            var book = new Book
+            try
+            {
+                JToken token = JToken.Parse(body);
+
+                if (token is JArray array)
+                {
+                    List<string> messages = array
+                        .Select(x => x.Type == JTokenType.Object ? (string)x["errorMessage"] : null)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .ToList();
+
+                    if (messages.Any())
+                        return string.Join(" ", messages);
+                }
+                else if (token is JObject obj)
+                {
+                    string message = (string)obj["message"] ?? (string)obj["error"];
+
+                    if (!string.IsNullOrWhiteSpace(message))
+                        return message;
+                }
+            }
+            catch (JsonReaderException)
+            {
+            }
+
+            return body;
+        }
+
+
+        private static Book ConvertToBook(JSONBook jsonBook)
+        {
+            return new Book
             {
                 ForeignBookId = jsonBook.ForeignBookId,
                 ForeignAuthorId = jsonBook.Author?.ForeignAuthorId,
@@ -247,26 +278,6 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                 AudiobookInLibrary = jsonBook.LocalAudiobookBooks != null && jsonBook.LocalAudiobookBooks.Any(),
                 EbookInLibrary = jsonBook.LocalEbookBooks != null && jsonBook.LocalEbookBooks.Any()
             };
-
-            if (jsonBook.Formats != null && jsonBook.Formats.Any())
-            {
-                foreach (string format in jsonBook.Formats)
-                {
-                    if (string.Equals(format, "audiobook", StringComparison.OrdinalIgnoreCase) && !book.AvailableFormats.Contains(BookFormat.Audiobook))
-                        book.AvailableFormats.Add(BookFormat.Audiobook);
-                    else if (string.Equals(format, "ebook", StringComparison.OrdinalIgnoreCase) && !book.AvailableFormats.Contains(BookFormat.Ebook))
-                        book.AvailableFormats.Add(BookFormat.Ebook);
-                }
-            }
-
-            if (book.AvailableFormats.Count == 0)
-            {
-                // Chaptarr did not tell us which formats this work offers; assume both are requestable.
-                book.AvailableFormats.Add(BookFormat.Audiobook);
-                book.AvailableFormats.Add(BookFormat.Ebook);
-            }
-
-            return book;
         }
 
 
@@ -319,10 +330,15 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
             public string MediaType { get; set; }
             public DateTime? ReleaseDate { get; set; }
             public string RemoteCover { get; set; }
-            public List<string> Formats { get; set; }
             public JSONAuthor Author { get; set; }
+            public List<JSONEdition> Editions { get; set; }
             public List<object> LocalAudiobookBooks { get; set; }
             public List<object> LocalEbookBooks { get; set; }
+        }
+
+        private class JSONEdition
+        {
+            public string ForeignEditionId { get; set; }
         }
 
         private class JSONAuthor

@@ -5,7 +5,7 @@ namespace Requestrr.WebApi.RequestrrBot.Books
 {
     public interface IBookUserInterface
     {
-        Task ShowBookSelectionAsync(BookRequest request, IReadOnlyList<Book> books);
+        Task ShowBookSelectionAsync(BookRequest request, IReadOnlyList<Book> books, string searchTerm);
         Task WarnNoBookFoundAsync(string searchTerm);
         Task ShowBookFormatSelectionAsync(BookRequest request, Book book);
         Task DisplayBookRequestSuccessAsync(Book book, BookFormat format);

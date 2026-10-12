@@ -42,26 +42,21 @@ namespace Requestrr.WebApi.RequestrrBot.Books
 
             if (books.Count > 1)
             {
-                await _userInterface.ShowBookSelectionAsync(new BookRequest(_user, _categoryId), books);
+                await _userInterface.ShowBookSelectionAsync(new BookRequest(_user, _categoryId), books, searchTerm);
                 return;
             }
 
-            await HandleBookSelectionAsync(books.Single());
+            await HandleBookSelectionAsync(books.Single().ForeignBookId);
         }
 
 
         public async Task HandleBookSelectionAsync(string foreignBookId)
         {
             Book book = await _bookSearcher.SearchBookByIdAsync(new BookRequest(_user, _categoryId), foreignBookId);
-            await HandleBookSelectionAsync(book);
-        }
 
-
-        private async Task HandleBookSelectionAsync(Book book)
-        {
             if (book == null)
             {
-                await _userInterface.WarnNoBookFoundAsync("(unknown)");
+                await _userInterface.WarnNoBookFoundAsync(foreignBookId);
                 return;
             }
 
@@ -75,7 +70,7 @@ namespace Requestrr.WebApi.RequestrrBot.Books
 
             if (requestable.Count == 1)
             {
-                await RequestBookAsync(book.ForeignBookId, requestable.Single());
+                await RequestBookAsync(book, requestable.Single());
                 return;
             }
 
@@ -87,12 +82,24 @@ namespace Requestrr.WebApi.RequestrrBot.Books
         {
             Book book = await _bookSearcher.SearchBookByIdAsync(new BookRequest(_user, _categoryId), foreignBookId);
 
-            if (book == null)
+            if (book == null || !book.AvailableFormats.Contains(format))
             {
                 await _userInterface.WarnNoBookFoundAsync(foreignBookId);
                 return;
             }
 
+            if (book.InLibrary(format))
+            {
+                await _userInterface.WarnBookAlreadyInLibraryAsync(book, format);
+                return;
+            }
+
+            await RequestBookAsync(book, format);
+        }
+
+
+        private async Task RequestBookAsync(Book book, BookFormat format)
+        {
             BookRequestResult result = await _requester.RequestBookAsync(new BookRequest(_user, _categoryId), book, format);
 
             if (!result.WasSuccess)

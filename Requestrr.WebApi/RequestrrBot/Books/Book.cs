@@ -23,8 +23,11 @@ namespace Requestrr.WebApi.RequestrrBot.Books
         public string MediaType { get; set; }
         public System.DateTime? ReleaseDate { get; set; }
 
-        /// <summary>Formats the lookup result indicates this work offers.</summary>
+        /// <summary>Formats Chaptarr can import for this work. Only filled by an id lookup.</summary>
         public List<BookFormat> AvailableFormats { get; set; } = new List<BookFormat>();
+
+        /// <summary>Provider ids of the lookup row returned for each format, sent back on import.</summary>
+        public Dictionary<BookFormat, BookImportIds> FormatIds { get; set; } = new Dictionary<BookFormat, BookImportIds>();
 
         /// <summary>True when the format already exists in the Chaptarr library (local instance).</summary>
         public bool AudiobookInLibrary { get; set; }
@@ -34,5 +37,11 @@ namespace Requestrr.WebApi.RequestrrBot.Books
         {
             return format == BookFormat.Audiobook ? AudiobookInLibrary : EbookInLibrary;
         }
+    }
+
+    public class BookImportIds
+    {
+        public string ForeignBookId { get; set; }
+        public string ForeignAuthorId { get; set; }
     }
 }

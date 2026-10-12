@@ -19,12 +19,12 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
         }
 
 
-        public async Task ShowBookSelectionAsync(BookRequest request, IReadOnlyList<Book> books)
+        public async Task ShowBookSelectionAsync(BookRequest request, IReadOnlyList<Book> books, string searchTerm)
         {
             List<DiscordSelectComponentOption> options = books.Take(15).Select(x => new DiscordSelectComponentOption(GetFormattedBookName(x), $"{request.CategoryId}/{x.ForeignBookId}")).ToList();
             DiscordSelectComponent select = new DiscordSelectComponent($"BkRS/{_interactionContext.User.Id}/{request.CategoryId}", LimitStringSize(Language.Current.DiscordCommandBookRequestHelpDropdown), options);
 
-            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddComponents(select).WithContent(Language.Current.DiscordCommandBookRequestHelp));
+            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddComponents(select).WithContent(Language.Current.DiscordCommandBookRequestHelp.ReplaceTokens(LanguageTokens.SearchTerm, searchTerm)));
         }
 
 
