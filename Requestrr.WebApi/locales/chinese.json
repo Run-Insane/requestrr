@@ -153,5 +153,20 @@
   "Discord.Embed.Music.Quality": "质量",
   "Discord.Embed.Music.ListenNow": "現在聽",
   "Discord.Notification.Music.Artist.Channel": "來自 **[MusicArtistName]** 的音樂已開始下載！",
-  "Discord.Notification.Music.Artist.DM": "來自 **[MusicArtistName]** 的音樂已開始下載！"
+  "Discord.Notification.Music.Artist.DM": "來自 **[MusicArtistName]** 的音樂已開始下載！",
+  "Discord.Command.Books.Request.Title.Name": "书籍",
+  "Discord.Command.Books.Request.Title.Description": "按标题请求书籍（有声书/电子书）",
+  "Discord.Command.Books.Request.Title.Option.Name": "标题",
+  "Discord.Command.Books.Request.Title.Option.Description": "书籍的标题",
+  "Discord.Command.Books.Request.Help": "我找到了多本与 **\"[SearchTerm]\"** 匹配的书籍，你指的是哪一本？",
+  "Discord.Command.Books.Request.Help.Dropdown": "选择一本书",
+  "Discord.Command.Books.Format.Help": "**[BookTitle]** 有多种格式，你想要哪一种？",
+  "Discord.Command.Books.Format.Help.Dropdown": "选择格式",
+  "Discord.Command.Books.NotFound": "我找不到名为 \"[BookTitle]\" 的书籍，请尝试其他内容。",
+  "Discord.Command.Books.AlreadyInLibrary": "**[BookTitle]** 已在图书馆中，祝你阅读愉快！",
+  "Discord.Command.Books.Request.Success": "你对 **[BookTitle]** 的 **[BookFormat]** 请求已发送到 Chaptarr！",
+  "Discord.Command.Books.Request.Pending": "**[BookTitle]** 仍在由元数据服务器处理中。Chaptarr 已保存你的请求，将在其可用时自动添加。",
+  "Discord.Command.Books.Request.Denied": "你对 **[BookTitle]** 的请求被拒绝：[Error]",
+  "Discord.Embed.Books.Author": "作者",
+  "Discord.Embed.Books.Format": "格式"
 }

@@ -3,17 +3,20 @@ using System.Linq;
 using System.Runtime;
 using Newtonsoft.Json.Linq;
 using Requestrr.WebApi.Controllers.DownloadClients.Lidarr;
+using Requestrr.WebApi.Controllers.DownloadClients.Chaptarr;
 using Requestrr.WebApi.Controllers.DownloadClients.Ombi;
 using Requestrr.WebApi.Controllers.DownloadClients.Overseerr;
 using Requestrr.WebApi.Controllers.DownloadClients.Radarr;
 using Requestrr.WebApi.Controllers.DownloadClients.Sonarr;
 using Requestrr.WebApi.RequestrrBot;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Lidarr;
+using Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Overseerr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Radarr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Sonarr;
 using Requestrr.WebApi.RequestrrBot.Movies;
 using Requestrr.WebApi.RequestrrBot.Music;
+using Requestrr.WebApi.RequestrrBot.Books;
 using Requestrr.WebApi.RequestrrBot.TvShows;
 
 namespace Requestrr.WebApi.Controllers.DownloadClients
@@ -134,6 +137,26 @@ namespace Requestrr.WebApi.Controllers.DownloadClients
                 }
 
                 SetMusicSettings(musicSettings, settings);
+            });
+        }
+
+
+        /// <summary>
+        /// Handles the saving of new Chaptarr settings
+        /// </summary>
+        public static void SetChaptarr(BooksSettings booksSettings, ChaptarrSettingsModel chaptarrSettings)
+        {
+            SettingsFile.Write(settings =>
+            {
+                settings.DownloadClients.Chaptarr.Hostname = chaptarrSettings.Hostname;
+                settings.DownloadClients.Chaptarr.Port = chaptarrSettings.Port;
+                settings.DownloadClients.Chaptarr.ApiKey = chaptarrSettings.ApiKey;
+                settings.DownloadClients.Chaptarr.BaseUrl = chaptarrSettings.BaseUrl;
+                settings.DownloadClients.Chaptarr.UseSSL = chaptarrSettings.UseSSL;
+                settings.DownloadClients.Chaptarr.RootFolder = chaptarrSettings.RootFolder;
+                settings.DownloadClients.Chaptarr.SearchNewRequests = chaptarrSettings.SearchNewRequests;
+
+                settings.Books.Client = booksSettings.Client;
             });
         }
 

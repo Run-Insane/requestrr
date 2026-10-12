@@ -12,6 +12,7 @@
       "TvShowRoles": [],
       "MovieRoles": [],
       "MusicRoles": [],
+      "BookRoles": [],
       "MonitoredChannels": [],
       "EnableRequestsThroughDirectMessages": false,
       "AutomaticallyNotifyRequesters": true,
@@ -22,6 +23,15 @@
     "Language": "english"
   },
   "DownloadClients": {
+    "Chaptarr": {
+      "Hostname": "",
+      "Port": 8789,
+      "ApiKey": "",
+      "BaseUrl": "",
+      "RootFolder": "",
+      "SearchNewRequests": true,
+      "UseSSL": false
+    },
     "Lidarr": {
       "Hostname": "",
       "Port": 8686,
@@ -122,6 +132,9 @@
   "Music": {
     "Client": "Disabled"
   },
+  "Books": {
+    "Client": "Disabled"
+  },
   "TvShows": {
     "Client": "Disabled",
     "Restrictions": "None"
@@ -129,5 +142,5 @@
   "Port": 4545,
   "BaseUrl": "",
   "DisableAuthentication": false,
-  "Version": "2.1.3"
+  "Version": "2.1.4"
 }

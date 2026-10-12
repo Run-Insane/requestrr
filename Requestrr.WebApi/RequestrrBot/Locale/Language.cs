@@ -9,6 +9,10 @@ namespace Requestrr.WebApi.RequestrrBot.Locale
         public static string SeasonNumber = "[SeasonNumber]";
         public static string MovieTitle = "[MovieTitle]";
         public static string MusicArtistName = "[MusicArtistName]";
+        public static string BookTitle = "[BookTitle]";
+        public static string BookFormat = "[BookFormat]";
+        public static string SearchTerm = "[SearchTerm]";
+        public static string Error = "[Error]";
         public static string AuthorUsername = "[AuthorUsername]";
         public static string BotUsername = "[BotUsername]";
         public static string MovieTMDB = "[MovieTMDB]";
@@ -463,6 +467,51 @@ namespace Requestrr.WebApi.RequestrrBot.Locale
 
         [JsonProperty("Discord.Notification.Music.Artist.DM")]
         public string DiscordNotificationMusicArtistDM { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Title.Name")]
+        public string DiscordCommandBookRequestTitleName { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Title.Description")]
+        public string DiscordCommandBookRequestTitleDescription { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Title.Option.Name")]
+        public string DiscordCommandBookRequestTitleOptionName { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Title.Option.Description")]
+        public string DiscordCommandBookRequestTitleOptionDescription { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Help")]
+        public string DiscordCommandBookRequestHelp { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Help.Dropdown")]
+        public string DiscordCommandBookRequestHelpDropdown { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Format.Help")]
+        public string DiscordCommandBookFormatHelp { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Format.Help.Dropdown")]
+        public string DiscordCommandBookFormatHelpDropdown { get; set; }
+
+        [JsonProperty("Discord.Command.Books.NotFound")]
+        public string DiscordCommandBookNotFound { get; set; }
+
+        [JsonProperty("Discord.Command.Books.AlreadyInLibrary")]
+        public string DiscordCommandBookAlreadyInLibrary { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Success")]
+        public string DiscordCommandBookRequestSuccess { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Pending")]
+        public string DiscordCommandBookRequestPending { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Denied")]
+        public string DiscordCommandBookRequestDenied { get; set; }
+
+        [JsonProperty("Discord.Embed.Books.Author")]
+        public string DiscordEmbedBookAuthor { get; set; }
+
+        [JsonProperty("Discord.Embed.Books.Format")]
+        public string DiscordEmbedBookFormat { get; set; }
 
         [JsonProperty("Discord.Command.Music.Artist.Request.Help")]
         public string DiscordCommandMusicArtistRequestHelp { get; set; }

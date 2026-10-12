@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Requestrr.WebApi.RequestrrBot.DownloadClients;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Lidarr;
+using Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Ombi;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Overseerr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Radarr;
@@ -26,11 +27,14 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
                 TvShowDownloadClientConfigurationHash = ComputeTvClientConfigurationHashCode(settings),
                 MusicDownloadClient = settings.Music.Client,
                 MusicDownloadClientConfigurationHash = ComputeMusicClientConfigurationHashCode(settings),
+                BooksDownloadClient = settings.Books.Client,
+                BooksDownloadClientConfigurationHash = ComputeBooksClientConfigurationHashCode(settings),
                 StatusMessage = settings.ChatClients.Discord.StatusMessage,
                 MonitoredChannels = settings.ChatClients.Discord.MonitoredChannels.ToObject<string[]>(),
                 TvShowRoles = settings.ChatClients.Discord.TvShowRoles.ToObject<string[]>(),
                 MovieRoles = settings.ChatClients.Discord.MovieRoles.ToObject<string[]>(),
                 MusicRoles = settings.ChatClients.Discord.MusicRoles.ToObject<string[]>(),
+                BookRoles = settings.ChatClients.Discord.BookRoles.ToObject<string[]>(),
                 ClientID = settings.ChatClients.Discord.ClientId,
                 EnableRequestsThroughDirectMessages = settings.ChatClients.Discord.EnableRequestsThroughDirectMessages,
                 AutomaticallyNotifyRequesters = settings.ChatClients.Discord.AutomaticallyNotifyRequesters,
@@ -147,6 +151,30 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
                 hash.Add(clientSettings.ApiKey);
                 hash.Add(clientSettings.UseSSL);
                 hash.Add(clientSettings.Version);
+            }
+
+            return hash.ToHashCode();
+        }
+
+
+        public int ComputeBooksClientConfigurationHashCode(dynamic settings)
+        {
+            HashCode hash = new HashCode();
+
+            if (settings.Books.Client == DownloadClient.Chaptarr)
+            {
+                ChaptarrSettings clientSettings = new ChaptarrSettingsProvider().Provide();
+
+                hash.Add(clientSettings.Hostname);
+                hash.Add(clientSettings.Port);
+                hash.Add(clientSettings.ApiKey);
+                hash.Add(clientSettings.UseSSL);
+                hash.Add(clientSettings.BaseUrl);
+                hash.Add(clientSettings.RootFolder);
+            }
+            else
+            {
+                hash.Add(DownloadClient.Disabled);
             }
 
             return hash.ToHashCode();

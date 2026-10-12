@@ -153,5 +153,20 @@
   "Discord.Embed.Music.Quality": "Qualität",
   "Discord.Embed.Music.ListenNow": "Hören Sie jetzt zu",
   "Discord.Notification.Music.Artist.Channel": "Der Download der Musik von **[MusicArtistName]** hat begonnen!",
-  "Discord.Notification.Music.Artist.DM": "Der Download der Musik von **[MusicArtistName]** hat begonnen!"
+  "Discord.Notification.Music.Artist.DM": "Der Download der Musik von **[MusicArtistName]** hat begonnen!",
+  "Discord.Command.Books.Request.Title.Name": "buch",
+  "Discord.Command.Books.Request.Title.Description": "Ein Buch (Hörbuch/E-Book) nach Titel anfordern",
+  "Discord.Command.Books.Request.Title.Option.Name": "titel",
+  "Discord.Command.Books.Request.Title.Option.Description": "Titel des Buches",
+  "Discord.Command.Books.Request.Help": "Ich habe mehrere Bücher gefunden, die mit **\"[SearchTerm]\"** übereinstimmen, welches meinst du?",
+  "Discord.Command.Books.Request.Help.Dropdown": "Wähle ein Buch",
+  "Discord.Command.Books.Format.Help": "**[BookTitle]** ist in mehreren Formaten verfügbar, welches möchtest du?",
+  "Discord.Command.Books.Format.Help.Dropdown": "Wähle ein Format",
+  "Discord.Command.Books.NotFound": "Ich konnte kein Buch mit dem Namen \"[BookTitle]\" finden, bitte versuche etwas anderes.",
+  "Discord.Command.Books.AlreadyInLibrary": "**[BookTitle]** ist bereits in der Bibliothek, viel Spaß!",
+  "Discord.Command.Books.Request.Success": "Deine **[BookFormat]**-Anfrage für **[BookTitle]** wurde an Chaptarr gesendet!",
+  "Discord.Command.Books.Request.Pending": "**[BookTitle]** wird noch vom Metadaten-Server vorbereitet. Chaptarr hat deine Anfrage gespeichert und fügt sie automatisch hinzu, sobald sie verfügbar ist.",
+  "Discord.Command.Books.Request.Denied": "Deine Anfrage für **[BookTitle]** wurde abgelehnt: [Error]",
+  "Discord.Embed.Books.Author": "Autor",
+  "Discord.Embed.Books.Format": "Formate"
 }
