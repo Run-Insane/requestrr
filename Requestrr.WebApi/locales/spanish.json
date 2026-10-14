@@ -158,6 +158,8 @@
     "Discord.Command.Books.Request.Title.Description": "Solicitar un libro (audiolibro/ebook) por título",
     "Discord.Command.Books.Request.Title.Option.Name": "titulo",
     "Discord.Command.Books.Request.Title.Option.Description": "título del libro",
+    "Discord.Command.Books.Request.Source.Option.Name": "fuente",
+    "Discord.Command.Books.Request.Source.Option.Description": "dónde buscar el libro (por defecto la define el administrador)",
     "Discord.Command.Books.Request.Help": "Encontré varios libros que coinciden con **\"[SearchTerm]\"**, ¿cuál querías?",
     "Discord.Command.Books.Request.Help.Dropdown": "Selecciona un libro",
     "Discord.Command.Books.Format.Help": "**[BookTitle]** está disponible en varios formatos, ¿cuál quieres?",
@@ -167,6 +169,7 @@
     "Discord.Command.Books.Request.Success": "¡Tu solicitud de **[BookFormat]** de **[BookTitle]** ha sido enviada a Chaptarr!",
     "Discord.Command.Books.Request.Pending": "**[BookTitle]** todavía está siendo preparado por el servidor de metadatos. Chaptarr guardó tu solicitud y la agregará automáticamente cuando esté disponible.",
     "Discord.Command.Books.Request.Denied": "Tu solicitud de **[BookTitle]** fue denegada: [Error]",
+    "Discord.Command.Books.Request.Confirm": "Si quieres solicitar **[BookTitle]** como **[BookFormat]** por favor haz clic en el botón de solicitud directamente bajo este mensaje.",
     "Discord.Embed.Books.Author": "Autor",
     "Discord.Embed.Books.Format": "Formatos"
 }

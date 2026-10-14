@@ -151,7 +151,7 @@ namespace Requestrr.WebApi.RequestrrBot
             [SlashCommand("[REQUEST_BOOK_TITLE_NAME]", "[REQUEST_BOOK_TITLE_DESCRIPTION]")]
             [RequireRoles(new ulong[] { [REQUIRED_BOOK_ROLE_IDS] })]
             [RequireChannels(new ulong[] { [REQUIRED_CHANNEL_IDS] })]
-            public async Task BookByTitle[BOOK_CATEGORY_ID](InteractionContext ctx, [Option("[REQUEST_BOOK_TITLE_OPTION_NAME]", "[REQUEST_BOOK_TITLE_OPTION_DESCRIPTION]")] string bookTitle)
+            public async Task BookByTitle[BOOK_CATEGORY_ID](InteractionContext ctx, [Option("[REQUEST_BOOK_TITLE_OPTION_NAME]", "[REQUEST_BOOK_TITLE_OPTION_DESCRIPTION]")] string bookTitle, [Option("[REQUEST_BOOK_SOURCE_OPTION_NAME]", "[REQUEST_BOOK_SOURCE_OPTION_DESCRIPTION]")] [Choice("Hardcover", "hardcover")] [Choice("Goodreads", "goodreads")] [Choice("Audible", "audible")] string bookSource = null)
             {
                 try
                 {
@@ -159,7 +159,7 @@ namespace Requestrr.WebApi.RequestrrBot
                     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral(settings.AutomaticallyPurgeCommandMessages).WithContent(Language.Current.DiscordCommandSending));
 
                     var workFlow = _serviceProvider.Get<BooksWorkflowFactory>().CreateRequestingWorkflow(ctx.Interaction, [BOOK_CATEGORY_ID]);
-                    await workFlow.SearchBooksAsync(bookTitle.Trim());
+                    await workFlow.SearchBooksAsync(bookTitle.Trim(), bookSource);
                 }
                 catch (System.Exception ex)
                 {

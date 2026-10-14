@@ -312,6 +312,7 @@ namespace Requestrr.WebApi
                     BaseUrl = string.Empty,
                     RootFolder = string.Empty,
                     SearchNewRequests = true,
+                    SearchProvider = ChaptarrSearchProviders.Goodreads,
                     UseSSL = false
                 };
 

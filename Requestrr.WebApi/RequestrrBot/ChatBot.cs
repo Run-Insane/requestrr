@@ -801,8 +801,19 @@ namespace Requestrr.WebApi.RequestrrBot
                         string foreignBookId = string.Join("/", parts.Skip(1).Take(parts.Length - 2));
 
                         await CreateBookRequestWorkFlow(e, categoryId)
-                            .RequestBookAsync(foreignBookId, format);
+                            .HandleBookFormatSelectionAsync(foreignBookId, format);
                     }
+                }
+                else if (e.Id.ToLower().StartsWith("bkrc"))
+                {
+                    // Request button: id is BkRC/{userId}/{categoryId}/{formatInt}/{foreignBookId}
+                    string[] parts = e.Id.Split("/");
+                    int categoryId = int.Parse(parts[2]);
+                    BookFormat format = (BookFormat)int.Parse(parts[3]);
+                    string foreignBookId = string.Join("/", parts.Skip(4));
+
+                    await CreateBookRequestWorkFlow(e, categoryId)
+                        .RequestBookAsync(foreignBookId, format);
                 }
                 else
                 {

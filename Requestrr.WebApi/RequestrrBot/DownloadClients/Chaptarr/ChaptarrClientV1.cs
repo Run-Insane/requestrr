@@ -77,14 +77,22 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         }
 
 
-        public async Task<IReadOnlyList<Book>> SearchBooksAsync(BookRequest request, string searchTerm)
+        public async Task<IReadOnlyList<Book>> SearchBooksAsync(BookRequest request, string searchTerm, string provider = null)
         {
             try
             {
-                List<JSONBook> jsonBooks = await LookupAsync(searchTerm.Trim(), null);
+                provider = string.IsNullOrWhiteSpace(provider) ? Settings.SearchProvider : provider.Trim().ToLower();
 
-                // Free-text rows carry no reliable media type, so formats are resolved by id once a book is picked.
-                return jsonBooks
+                string url = $"{BaseURL}/search?term={Uri.EscapeDataString(searchTerm.Trim())}&provider={Uri.EscapeDataString(provider)}";
+                HttpResponseMessage response = await HttpGetAsync(url);
+                await response.ThrowIfNotSuccessfulAsync("ChaptarrSearch failed", x => x.error);
+
+                // Results mix authors and books; only book entries can be requested.
+                List<JSONSearchResult> results = JsonConvert.DeserializeObject<List<JSONSearchResult>>(await response.Content.ReadAsStringAsync()) ?? new List<JSONSearchResult>();
+
+                // Search rows carry no reliable media type, so formats are resolved by id once a book is picked.
+                return results
+                    .Select(x => x?.Book)
                     .Where(x => x != null && !string.IsNullOrWhiteSpace(x.ForeignBookId))
                     .GroupBy(x => x.ForeignBookId)
                     .Select(g => ConvertToBook(g.First()))
@@ -138,7 +146,8 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                     book.FormatIds[format] = new BookImportIds
                     {
                         ForeignBookId = row.ForeignBookId,
-                        ForeignAuthorId = row.Author?.ForeignAuthorId
+                        ForeignAuthorId = row.Author?.ForeignAuthorId,
+                        AuthorName = row.Author?.AuthorName
                     };
                 }
 
@@ -162,24 +171,47 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                     return new BookRequestResult { WasSuccess = false, Error = "Chaptarr has no edition of this book in the requested format." };
                 }
 
-                var importBody = new Dictionary<string, object>
+                string mediaType = format == BookFormat.Audiobook ? "audiobook" : "ebook";
+
+                var author = new Dictionary<string, object>
                 {
-                    ["foreignBookId"] = ids.ForeignBookId,
                     ["foreignAuthorId"] = ids.ForeignAuthorId,
-                    ["mediaType"] = format == BookFormat.Audiobook ? "audiobook" : "ebook",
-                    ["authorMonitoring"] = new Dictionary<string, object>
+                    ["authorName"] = ids.AuthorName,
+                    // Monitor only the requested book; the rest of the author's catalog stays unmonitored.
+                    ["addOptions"] = new Dictionary<string, object>
                     {
                         ["monitor"] = "specificBook",
-                        ["searchForMissing"] = Settings.SearchNewRequests
+                        ["searchForMissingBooks"] = false
                     }
                 };
 
                 if (!string.IsNullOrWhiteSpace(Settings.RootFolder))
                 {
-                    importBody["rootFolder"] = Settings.RootFolder;
+                    author[format == BookFormat.Audiobook ? "audiobookRootFolderPath" : "ebookRootFolderPath"] = Settings.RootFolder;
                 }
 
-                HttpResponseMessage response = await HttpPostAsync($"{BaseURL}/book/import", JsonConvert.SerializeObject(importBody));
+                // POST /book carries addOptions.searchForNewBook into Chaptarr's add logic, so the search also runs
+                // when the request is queued as pending (/book/import drops it in that case).
+                var addBody = new Dictionary<string, object>
+                {
+                    ["foreignBookId"] = ids.ForeignBookId,
+                    ["title"] = book.Title,
+                    ["mediaType"] = mediaType,
+                    ["monitored"] = true,
+                    ["addOptions"] = new Dictionary<string, object>
+                    {
+                        ["searchForNewBook"] = Settings.SearchNewRequests
+                    },
+                    ["author"] = author
+                };
+
+                HttpResponseMessage response = await HttpPostAsync($"{BaseURL}/book?mediaType={mediaType}", JsonConvert.SerializeObject(addBody));
+
+                // Chaptarr saved the request; it adds (and searches) the book once the metadata server has prepared it.
+                if (response.StatusCode == HttpStatusCode.Accepted)
+                {
+                    return new BookRequestResult { WasSuccess = true, WasPending = true };
+                }
 
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
@@ -188,20 +220,12 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
                 if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
-                    string errorBody = await response.Content.ReadAsStringAsync();
-
-                    // Chaptarr saves the request and adds it later when the metadata server is still preparing it.
-                    if (errorBody.Contains("being prepared by the metadata server"))
-                    {
-                        return new BookRequestResult { WasSuccess = true, WasPending = true };
-                    }
-
-                    string error = ParseErrorMessage(errorBody);
-                    _logger.LogWarning($"Chaptarr rejected the book import for \"{book.Title}\": {error}");
+                    string error = ParseErrorMessage(await response.Content.ReadAsStringAsync());
+                    _logger.LogWarning($"Chaptarr rejected adding \"{book.Title}\": {error}");
                     return new BookRequestResult { WasSuccess = false, Error = error };
                 }
 
-                await response.ThrowIfNotSuccessfulAsync("ChaptarrBookImport failed", x => x.error);
+                await response.ThrowIfNotSuccessfulAsync("ChaptarrBookAdd failed", x => x.error);
 
                 return new BookRequestResult { WasSuccess = true };
             }
@@ -229,7 +253,7 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
 
         /// <summary>
-        /// Chaptarr returns validation errors as [{propertyName, errorMessage}] and other errors as {error|message}.
+        /// Chaptarr returns validation errors as [{propertyName, errorMessage}], other errors as {error|message} or a plain string.
         /// </summary>
         private static string ParseErrorMessage(string body)
         {
@@ -246,6 +270,13 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
                     if (messages.Any())
                         return string.Join(" ", messages);
+                }
+                else if (token.Type == JTokenType.String)
+                {
+                    string message = (string)token;
+
+                    if (!string.IsNullOrWhiteSpace(message))
+                        return message;
                 }
                 else if (token is JObject obj)
                 {
@@ -341,9 +372,15 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
             public string ForeignEditionId { get; set; }
         }
 
+        private class JSONSearchResult
+        {
+            public JSONBook Book { get; set; }
+        }
+
         private class JSONAuthor
         {
             public string ForeignAuthorId { get; set; }
+            public string AuthorName { get; set; }
         }
     }
 }

@@ -30,9 +30,9 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         }
 
 
-        public Task<IReadOnlyList<Book>> SearchBooksAsync(BookRequest request, string searchTerm)
+        public Task<IReadOnlyList<Book>> SearchBooksAsync(BookRequest request, string searchTerm, string provider = null)
         {
-            return CreateInstance<IBookSearcher>().SearchBooksAsync(request, searchTerm);
+            return CreateInstance<IBookSearcher>().SearchBooksAsync(request, searchTerm, provider);
         }
 
         public Task<Book> SearchBookByIdAsync(BookRequest request, string foreignBookId)

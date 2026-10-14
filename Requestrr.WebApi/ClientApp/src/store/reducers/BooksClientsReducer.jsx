@@ -13,7 +13,8 @@ export default function BooksClientsReducer(state = {}, action) {
                 apiKey: action.payload.chaptarr.apiKey,
                 useSSL: action.payload.chaptarr.useSSL,
                 rootFolder: action.payload.chaptarr.rootFolder,
-                searchNewRequests: action.payload.chaptarr.searchNewRequests
+                searchNewRequests: action.payload.chaptarr.searchNewRequests,
+                searchProvider: action.payload.chaptarr.searchProvider
             }
         };
     } else if (action.type === SET_DISABLED_CLIENT) {

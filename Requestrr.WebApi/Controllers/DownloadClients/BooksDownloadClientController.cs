@@ -43,7 +43,8 @@ namespace Requestrr.WebApi.Controllers.DownloadClients
                     ApiKey = chaptarr?.ApiKey ?? string.Empty,
                     UseSSL = chaptarr?.UseSSL ?? false,
                     RootFolder = chaptarr?.RootFolder ?? string.Empty,
-                    SearchNewRequests = chaptarr?.SearchNewRequests ?? true
+                    SearchNewRequests = chaptarr?.SearchNewRequests ?? true,
+                    SearchProvider = chaptarr?.SearchProvider ?? ChaptarrSearchProviders.Goodreads
                 }
             });
         }

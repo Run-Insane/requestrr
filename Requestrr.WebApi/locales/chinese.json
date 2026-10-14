@@ -158,6 +158,8 @@
   "Discord.Command.Books.Request.Title.Description": "按标题请求书籍（有声书/电子书）",
   "Discord.Command.Books.Request.Title.Option.Name": "标题",
   "Discord.Command.Books.Request.Title.Option.Description": "书籍的标题",
+  "Discord.Command.Books.Request.Source.Option.Name": "来源",
+  "Discord.Command.Books.Request.Source.Option.Description": "搜索书籍的数据来源（默认由管理员设置）",
   "Discord.Command.Books.Request.Help": "我找到了多本与 **\"[SearchTerm]\"** 匹配的书籍，你指的是哪一本？",
   "Discord.Command.Books.Request.Help.Dropdown": "选择一本书",
   "Discord.Command.Books.Format.Help": "**[BookTitle]** 有多种格式，你想要哪一种？",
@@ -167,6 +169,7 @@
   "Discord.Command.Books.Request.Success": "你对 **[BookTitle]** 的 **[BookFormat]** 请求已发送到 Chaptarr！",
   "Discord.Command.Books.Request.Pending": "**[BookTitle]** 仍在由元数据服务器处理中。Chaptarr 已保存你的请求，将在其可用时自动添加。",
   "Discord.Command.Books.Request.Denied": "你对 **[BookTitle]** 的请求被拒绝：[Error]",
+  "Discord.Command.Books.Request.Confirm": "如果你想以 **[BookFormat]** 格式请求 **[BookTitle]**，请单击此消息正下方的请求按钮。",
   "Discord.Embed.Books.Author": "作者",
   "Discord.Embed.Books.Format": "格式"
 }

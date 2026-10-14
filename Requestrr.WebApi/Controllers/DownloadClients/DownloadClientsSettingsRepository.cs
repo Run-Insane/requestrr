@@ -155,6 +155,7 @@ namespace Requestrr.WebApi.Controllers.DownloadClients
                 settings.DownloadClients.Chaptarr.UseSSL = chaptarrSettings.UseSSL;
                 settings.DownloadClients.Chaptarr.RootFolder = chaptarrSettings.RootFolder;
                 settings.DownloadClients.Chaptarr.SearchNewRequests = chaptarrSettings.SearchNewRequests;
+                settings.DownloadClients.Chaptarr.SearchProvider = chaptarrSettings.SearchProvider;
 
                 settings.Books.Client = booksSettings.Client;
             });

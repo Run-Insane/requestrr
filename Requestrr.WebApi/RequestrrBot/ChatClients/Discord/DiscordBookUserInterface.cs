@@ -48,6 +48,17 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
         }
 
 
+        public async Task DisplayBookDetailsAsync(BookRequest request, Book book, BookFormat format)
+        {
+            DiscordButtonComponent requestButton = new DiscordButtonComponent(ButtonStyle.Primary, $"BkRC/{_interactionContext.User.Id}/{request.CategoryId}/{(int)format}/{book.ForeignBookId}", Language.Current.DiscordCommandRequestButton);
+            string content = Language.Current.DiscordCommandBookRequestConfirm
+                .ReplaceTokens(LanguageTokens.BookTitle, book.Title)
+                .ReplaceTokens(LanguageTokens.BookFormat, GetFormatName(format));
+
+            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(GenerateBookDetails(book)).AddComponents(requestButton).WithContent(content));
+        }
+
+
         public async Task DisplayBookRequestSuccessAsync(Book book, BookFormat format)
         {
             DiscordButtonComponent successButton = new DiscordButtonComponent(ButtonStyle.Success, "0/1/0", Language.Current.DiscordCommandRequestButtonSuccess);

@@ -138,6 +138,8 @@ namespace Requestrr.WebApi.RequestrrBot
             code = code.Replace("[REQUEST_BOOK_TITLE_DESCRIPTION]", Language.Current.DiscordCommandBookRequestTitleDescription);
             code = code.Replace("[REQUEST_BOOK_TITLE_OPTION_NAME]", Language.Current.DiscordCommandBookRequestTitleOptionName);
             code = code.Replace("[REQUEST_BOOK_TITLE_OPTION_DESCRIPTION]", Language.Current.DiscordCommandBookRequestTitleOptionDescription);
+            code = code.Replace("[REQUEST_BOOK_SOURCE_OPTION_NAME]", Language.Current.DiscordCommandBookRequestSourceOptionName);
+            code = code.Replace("[REQUEST_BOOK_SOURCE_OPTION_DESCRIPTION]", Language.Current.DiscordCommandBookRequestSourceOptionDescription);
 
 
             code = code.Replace("[REQUEST_PING_NAME]", Language.Current.DiscordCommandPingRequestName);

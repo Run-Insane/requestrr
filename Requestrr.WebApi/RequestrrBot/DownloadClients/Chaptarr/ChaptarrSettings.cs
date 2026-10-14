@@ -1,5 +1,14 @@
 namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 {
+    public static class ChaptarrSearchProviders
+    {
+        public const string Hardcover = "hardcover";
+        public const string Goodreads = "goodreads";
+        public const string Audible = "audible";
+
+        public static readonly string[] All = { Hardcover, Goodreads, Audible };
+    }
+
     public class ChaptarrSettings
     {
         public string Hostname { get; set; }
@@ -15,5 +24,8 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
 
         /// <summary>When true, imports trigger an immediate search for missing files.</summary>
         public bool SearchNewRequests { get; set; }
+
+        /// <summary>Default metadata source for /book searches: hardcover, goodreads or audible.</summary>
+        public string SearchProvider { get; set; }
     }
 }

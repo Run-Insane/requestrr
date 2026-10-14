@@ -14,7 +14,9 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                 UseSSL = (bool)settings.DownloadClients.Chaptarr.UseSSL,
                 BaseUrl = (string)settings.DownloadClients.Chaptarr.BaseUrl,
                 RootFolder = (string)settings.DownloadClients.Chaptarr.RootFolder,
-                SearchNewRequests = (bool)settings.DownloadClients.Chaptarr.SearchNewRequests
+                SearchNewRequests = (bool)settings.DownloadClients.Chaptarr.SearchNewRequests,
+                // Configs saved before this setting existed have no value; Goodreads was the only source then.
+                SearchProvider = (string)settings.DownloadClients.Chaptarr.SearchProvider ?? ChaptarrSearchProviders.Goodreads
             };
         }
     }

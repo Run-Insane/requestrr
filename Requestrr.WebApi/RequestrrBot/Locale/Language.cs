@@ -480,6 +480,12 @@ namespace Requestrr.WebApi.RequestrrBot.Locale
         [JsonProperty("Discord.Command.Books.Request.Title.Option.Description")]
         public string DiscordCommandBookRequestTitleOptionDescription { get; set; }
 
+        [JsonProperty("Discord.Command.Books.Request.Source.Option.Name")]
+        public string DiscordCommandBookRequestSourceOptionName { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Source.Option.Description")]
+        public string DiscordCommandBookRequestSourceOptionDescription { get; set; }
+
         [JsonProperty("Discord.Command.Books.Request.Help")]
         public string DiscordCommandBookRequestHelp { get; set; }
 
@@ -503,6 +509,9 @@ namespace Requestrr.WebApi.RequestrrBot.Locale
 
         [JsonProperty("Discord.Command.Books.Request.Pending")]
         public string DiscordCommandBookRequestPending { get; set; }
+
+        [JsonProperty("Discord.Command.Books.Request.Confirm")]
+        public string DiscordCommandBookRequestConfirm { get; set; }
 
         [JsonProperty("Discord.Command.Books.Request.Denied")]
         public string DiscordCommandBookRequestDenied { get; set; }

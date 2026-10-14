@@ -29,10 +29,10 @@ namespace Requestrr.WebApi.RequestrrBot.Books
         }
 
 
-        public async Task SearchBooksAsync(string searchTerm)
+        public async Task SearchBooksAsync(string searchTerm, string provider = null)
         {
             searchTerm = searchTerm.Replace(".", " ");
-            IReadOnlyList<Book> books = await _bookSearcher.SearchBooksAsync(new BookRequest(_user, _categoryId), searchTerm);
+            IReadOnlyList<Book> books = await _bookSearcher.SearchBooksAsync(new BookRequest(_user, _categoryId), searchTerm, provider);
 
             if (!books.Any())
             {
@@ -70,7 +70,7 @@ namespace Requestrr.WebApi.RequestrrBot.Books
 
             if (requestable.Count == 1)
             {
-                await RequestBookAsync(book, requestable.Single());
+                await _userInterface.DisplayBookDetailsAsync(new BookRequest(_user, _categoryId), book, requestable.Single());
                 return;
             }
 
@@ -78,23 +78,45 @@ namespace Requestrr.WebApi.RequestrrBot.Books
         }
 
 
+        public async Task HandleBookFormatSelectionAsync(string foreignBookId, BookFormat format)
+        {
+            Book book = await GetRequestableBookAsync(foreignBookId, format);
+
+            if (book != null)
+            {
+                await _userInterface.DisplayBookDetailsAsync(new BookRequest(_user, _categoryId), book, format);
+            }
+        }
+
+
         public async Task RequestBookAsync(string foreignBookId, BookFormat format)
+        {
+            Book book = await GetRequestableBookAsync(foreignBookId, format);
+
+            if (book != null)
+            {
+                await RequestBookAsync(book, format);
+            }
+        }
+
+
+        private async Task<Book> GetRequestableBookAsync(string foreignBookId, BookFormat format)
         {
             Book book = await _bookSearcher.SearchBookByIdAsync(new BookRequest(_user, _categoryId), foreignBookId);
 
             if (book == null || !book.AvailableFormats.Contains(format))
             {
                 await _userInterface.WarnNoBookFoundAsync(foreignBookId);
-                return;
+                return null;
             }
 
             if (book.InLibrary(format))
             {
                 await _userInterface.WarnBookAlreadyInLibraryAsync(book, format);
-                return;
+                return null;
             }
 
-            await RequestBookAsync(book, format);
+            return book;
         }
 
 

@@ -21,7 +21,8 @@ export function setChaptarrConnectionSettings(connectionSettings) {
             apiKey: connectionSettings.apiKey,
             useSSL: connectionSettings.useSSL,
             rootFolder: connectionSettings.rootFolder,
-            searchNewRequests: connectionSettings.searchNewRequests
+            searchNewRequests: connectionSettings.searchNewRequests,
+            searchProvider: connectionSettings.searchProvider
         };
 
         dispatch(setChaptarrClient({
@@ -82,7 +83,8 @@ export function saveChaptarrClient(saveModel) {
                 'ApiKey': saveModel.chaptarr.apiKey,
                 'UseSSL': saveModel.chaptarr.useSSL,
                 'RootFolder': saveModel.chaptarr.rootFolder,
-                'SearchNewRequests': saveModel.chaptarr.searchNewRequests
+                'SearchNewRequests': saveModel.chaptarr.searchNewRequests,
+                'SearchProvider': saveModel.chaptarr.searchProvider
             })
         })
             .then(data => data.json())
@@ -96,7 +98,8 @@ export function saveChaptarrClient(saveModel) {
                         apiKey: saveModel.chaptarr.apiKey,
                         useSSL: saveModel.chaptarr.useSSL,
                         rootFolder: saveModel.chaptarr.rootFolder,
-                        searchNewRequests: saveModel.chaptarr.searchNewRequests
+                        searchNewRequests: saveModel.chaptarr.searchNewRequests,
+                        searchProvider: saveModel.chaptarr.searchProvider
                     };
 
                     dispatch(setChaptarrClient({

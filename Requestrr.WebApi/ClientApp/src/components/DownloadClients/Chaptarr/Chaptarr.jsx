@@ -6,6 +6,7 @@ import { testChaptarrSettings as testSettings } from "../../../store/actions/Cha
 import { setChaptarrConnectionSettings as setConnectionSettings } from "../../../store/actions/ChaptarrClientActions"
 import ValidatedTextbox from "../../Inputs/ValidatedTextbox"
 import Textbox from "../../Inputs/Textbox"
+import Dropdown from "../../Inputs/Dropdown"
 
 import {
   FormGroup,
@@ -30,6 +31,7 @@ function Chaptarr(props) {
   const [baseUrl, setBaseUrl] = useState("");
   const [rootFolder, setRootFolder] = useState("");
   const [searchNewRequests, setSearchNewRequests] = useState(true);
+  const [searchProvider, setSearchProvider] = useState("goodreads");
 
   const propRef = useRef();
 
@@ -48,7 +50,13 @@ function Chaptarr(props) {
 
   useEffect(() => {
     onValueChange();
-  }, [apiKey, hostname, port, baseUrl, rootFolder, searchNewRequests]);
+  }, [apiKey, hostname, port, baseUrl, rootFolder, searchNewRequests, searchProvider]);
+
+
+  // The connection fields validate themselves after load; re-check the form so saving works without an edit.
+  useEffect(() => {
+    onValidate();
+  }, [isApiKeyValid, isHostnameValid, isPortValid]);
 
 
 
@@ -76,6 +84,7 @@ function Chaptarr(props) {
     setBaseUrl(reduxState.settings.baseUrl);
     setRootFolder(reduxState.settings.rootFolder);
     setSearchNewRequests(reduxState.settings.searchNewRequests);
+    setSearchProvider(reduxState.settings.searchProvider ?? "goodreads");
   };
 
   const onUseSSLChanged = (event) => {
@@ -129,7 +138,8 @@ function Chaptarr(props) {
       apiKey: apiKey,
       useSSL: useSSL,
       rootFolder: rootFolder,
-      searchNewRequests: searchNewRequests
+      searchNewRequests: searchNewRequests,
+      searchProvider: searchProvider
     }));
 
     props.onChange({
@@ -139,7 +149,8 @@ function Chaptarr(props) {
       apiKey: apiKey,
       useSSL: useSSL,
       rootFolder: rootFolder,
-      searchNewRequests: searchNewRequests
+      searchNewRequests: searchNewRequests,
+      searchProvider: searchProvider
     });
 
     onValidate();
@@ -279,11 +290,30 @@ function Chaptarr(props) {
       <div className="pl-lg-4">
         <Row>
           <Col lg="6">
-            <Textbox
-              name="Root Folder"
-              placeholder="Leave empty to use the default configured in Chaptarr."
-              value={rootFolder}
-              onChange={newRootFolder => setRootFolder(newRootFolder)} />
+            {/* Plain input: the shared Textbox drops the keystroke that empties the field. */}
+            <FormGroup>
+              <label
+                className="form-control-label"
+                htmlFor="input-Root Folder">
+                Root Folder
+              </label>
+              <Input
+                value={rootFolder ?? ""}
+                onChange={e => setRootFolder(e.target.value)}
+                className="form-control-alternative"
+                id="input-Root Folder"
+                placeholder="Leave empty to use the default configured in Chaptarr."
+                type="text" />
+            </FormGroup>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg="6">
+            <Dropdown
+              name="Default Search Provider"
+              value={searchProvider}
+              items={[{ name: "Goodreads", value: "goodreads" }, { name: "Hardcover (needs a Hardcover API token in Chaptarr)", value: "hardcover" }, { name: "Audible", value: "audible" }]}
+              onChange={newSearchProvider => setSearchProvider(newSearchProvider)} />
           </Col>
         </Row>
         <Row>

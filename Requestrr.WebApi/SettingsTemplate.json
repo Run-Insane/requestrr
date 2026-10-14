@@ -30,6 +30,7 @@
       "BaseUrl": "",
       "RootFolder": "",
       "SearchNewRequests": true,
+      "SearchProvider": "goodreads",
       "UseSSL": false
     },
     "Lidarr": {

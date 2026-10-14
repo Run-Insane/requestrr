@@ -43,5 +43,6 @@ namespace Requestrr.WebApi.RequestrrBot.Books
     {
         public string ForeignBookId { get; set; }
         public string ForeignAuthorId { get; set; }
+        public string AuthorName { get; set; }
     }
 }

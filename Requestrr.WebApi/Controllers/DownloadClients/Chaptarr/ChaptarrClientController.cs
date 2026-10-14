@@ -5,6 +5,7 @@ using Requestrr.WebApi.RequestrrBot.Books;
 using Requestrr.WebApi.RequestrrBot.DownloadClients;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -49,6 +50,13 @@ namespace Requestrr.WebApi.Controllers.DownloadClients.Chaptarr
         [HttpPost()]
         public async Task<IActionResult> SaveAsync([FromBody] ChaptarrSettingsModel model)
         {
+            string searchProvider = (model.SearchProvider ?? ChaptarrSearchProviders.Goodreads).Trim().ToLower();
+
+            if (!ChaptarrSearchProviders.All.Contains(searchProvider))
+            {
+                return BadRequest("Invalid search provider.");
+            }
+
             BooksSettings booksSettings = new BooksSettings
             {
                 Client = DownloadClient.Chaptarr
@@ -62,7 +70,8 @@ namespace Requestrr.WebApi.Controllers.DownloadClients.Chaptarr
                 Port = model.Port,
                 UseSSL = model.UseSSL,
                 RootFolder = string.IsNullOrWhiteSpace(model.RootFolder) ? string.Empty : model.RootFolder.Trim(),
-                SearchNewRequests = model.SearchNewRequests
+                SearchNewRequests = model.SearchNewRequests,
+                SearchProvider = searchProvider
             };
 
             DownloadClientsSettingsRepository.SetChaptarr(booksSettings, chaptarrSettings);
