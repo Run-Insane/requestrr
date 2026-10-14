@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Lidarr;
+using Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Overseerr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Radarr;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Sonarr;
@@ -296,6 +297,36 @@ namespace Requestrr.WebApi
                 ((JObject)settingsJson["DownloadClients"]).Add("Lidarr", JToken.FromObject(lidarrBlankSettings));
                 ((JObject)settingsJson).Add("Music", JToken.FromObject(musicClient));
                 ((JObject)settingsJson.ChatClients.Discord).Add("MusicRoles", JToken.FromObject(new List<string>()));
+                File.WriteAllText(settingsFilePath, JsonConvert.SerializeObject(settingsJson));
+            }
+
+            if (settingsJson.Version.ToString().Equals("2.1.3", StringComparison.InvariantCultureIgnoreCase))
+            {
+                settingsJson.Version = "2.1.4";
+
+                ChaptarrSettings chaptarrBlankSettings = new ChaptarrSettings
+                {
+                    Hostname = string.Empty,
+                    Port = 8789,
+                    ApiKey = string.Empty,
+                    BaseUrl = string.Empty,
+                    RootFolder = string.Empty,
+                    SearchNewRequests = true,
+                    SearchProvider = ChaptarrSearchProviders.Goodreads,
+                    UseSSL = false
+                };
+
+                var booksClient = new
+                {
+                    Client = "Disabled"
+                };
+
+                if (settingsJson["DownloadClients"]["Chaptarr"] == null)
+                    ((JObject)settingsJson["DownloadClients"]).Add("Chaptarr", JToken.FromObject(chaptarrBlankSettings));
+                if (settingsJson["Books"] == null)
+                    ((JObject)settingsJson).Add("Books", JToken.FromObject(booksClient));
+                if (settingsJson.ChatClients.Discord["BookRoles"] == null)
+                    ((JObject)settingsJson.ChatClients.Discord).Add("BookRoles", JToken.FromObject(new List<string>()));
                 File.WriteAllText(settingsFilePath, JsonConvert.SerializeObject(settingsJson));
             }
         }
