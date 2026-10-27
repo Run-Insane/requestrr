@@ -30,7 +30,8 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
 
         public async Task WarnNoBookFoundAsync(string searchTerm)
         {
-            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent(Language.Current.DiscordCommandBookNotFound.ReplaceTokens(LanguageTokens.BookTitle, searchTerm)));
+            DiscordWebhookBuilder builder = await AddPreviousDropdownsAsync(new DiscordWebhookBuilder(), null);
+            await _interactionContext.EditOriginalResponseAsync(builder.WithContent(Language.Current.DiscordCommandBookNotFound.ReplaceTokens(LanguageTokens.BookTitle, searchTerm)));
         }
 
 
@@ -44,7 +45,8 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
             DiscordSelectComponent select = new DiscordSelectComponent($"BkRF/{_interactionContext.User.Id}/{request.CategoryId}", LimitStringSize(Language.Current.DiscordCommandBookFormatHelpDropdown), options);
 
             string content = Language.Current.DiscordCommandBookFormatHelp.ReplaceTokens(LanguageTokens.BookTitle, book.Title);
-            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddComponents(select).WithContent(content));
+            DiscordWebhookBuilder builder = await AddPreviousDropdownsAsync(new DiscordWebhookBuilder(), book);
+            await _interactionContext.EditOriginalResponseAsync(builder.AddComponents(select).WithContent(content));
         }
 
 
@@ -55,7 +57,8 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
                 .ReplaceTokens(LanguageTokens.BookTitle, book.Title)
                 .ReplaceTokens(LanguageTokens.BookFormat, GetFormatName(format));
 
-            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(GenerateBookDetails(book)).AddComponents(requestButton).WithContent(content));
+            DiscordWebhookBuilder builder = await AddPreviousDropdownsAsync(new DiscordWebhookBuilder().AddEmbed(GenerateBookDetails(book)), book, format);
+            await _interactionContext.EditOriginalResponseAsync(builder.AddComponents(requestButton).WithContent(content));
         }
 
 
@@ -93,7 +96,8 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
         public async Task WarnBookAlreadyInLibraryAsync(Book book, BookFormat format)
         {
             string content = Language.Current.DiscordCommandBookAlreadyInLibrary.ReplaceTokens(LanguageTokens.BookTitle, book.Title);
-            await _interactionContext.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(GenerateBookDetails(book)).WithContent(content));
+            DiscordWebhookBuilder builder = await AddPreviousDropdownsAsync(new DiscordWebhookBuilder().AddEmbed(GenerateBookDetails(book)), book);
+            await _interactionContext.EditOriginalResponseAsync(builder.WithContent(content));
         }
 
 
@@ -117,6 +121,38 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
                 embedBuilder.WithImageUrl(book.RemoteCover);
 
             return embedBuilder.Build();
+        }
+
+
+        /// <summary>
+        /// Keeps the book dropdown (and the format dropdown when it belongs to the same book) on the message,
+        /// so the user can pick again until they confirm with the Request button.
+        /// </summary>
+        private async Task<DiscordWebhookBuilder> AddPreviousDropdownsAsync(DiscordWebhookBuilder builder, Book book, BookFormat? format = null)
+        {
+            List<DiscordSelectComponent> selectors = (await _interactionContext.GetOriginalResponseAsync()).FilterComponents<DiscordSelectComponent>().ToList();
+
+            DiscordSelectComponent bookSelector = selectors.FirstOrDefault(x => x.CustomId.StartsWith("BkRS", StringComparison.OrdinalIgnoreCase));
+
+            if (bookSelector != null)
+            {
+                string placeholder = book != null ? GetFormattedBookName(book) : bookSelector.Placeholder;
+                builder.AddComponents(new DiscordSelectComponent(bookSelector.CustomId, placeholder, bookSelector.Options));
+            }
+
+            if (book != null && format.HasValue)
+            {
+                DiscordSelectComponent formatSelector = selectors.FirstOrDefault(x =>
+                    x.CustomId.StartsWith("BkRF", StringComparison.OrdinalIgnoreCase) &&
+                    x.Options.Any(o => o.Value.Contains($"/{book.ForeignBookId}/")));
+
+                if (formatSelector != null)
+                {
+                    builder.AddComponents(new DiscordSelectComponent(formatSelector.CustomId, GetFormatName(format.Value), formatSelector.Options));
+                }
+            }
+
+            return builder;
         }
 
 

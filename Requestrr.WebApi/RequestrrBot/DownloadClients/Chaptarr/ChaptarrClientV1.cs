@@ -185,9 +185,25 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                     }
                 };
 
-                if (!string.IsNullOrWhiteSpace(Settings.RootFolder))
+                // Chaptarr requires a quality profile when the author is new; use the root folder's defaults for this format.
+                JSONRootFolder rootFolder = await GetRootFolderAsync(format);
+
+                if (rootFolder == null && !string.IsNullOrWhiteSpace(Settings.RootFolder))
                 {
-                    author[format == BookFormat.Audiobook ? "audiobookRootFolderPath" : "ebookRootFolderPath"] = Settings.RootFolder;
+                    return new BookRequestResult { WasSuccess = false, Error = $"Root folder '{Settings.RootFolder}' is not configured in Chaptarr." };
+                }
+
+                if (rootFolder != null)
+                {
+                    JSONMediaTypeSettings defaults = format == BookFormat.Audiobook ? rootFolder.Audiobook : rootFolder.Ebook;
+
+                    author[$"{mediaType}RootFolderPath"] = rootFolder.Path;
+
+                    if (defaults?.QualityProfileId > 0)
+                        author[$"{mediaType}QualityProfileId"] = defaults.QualityProfileId;
+
+                    if (defaults?.MetadataProfileId > 0)
+                        author[$"{mediaType}MetadataProfileId"] = defaults.MetadataProfileId;
                 }
 
                 // POST /book carries addOptions.searchForNewBook into Chaptarr's add logic, so the search also runs
@@ -221,6 +237,12 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                 if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     string error = ParseErrorMessage(await response.Content.ReadAsStringAsync());
+
+                    if (error.Contains("quality profile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        error = $"Chaptarr has no default {mediaType} root folder with a quality profile. Set one in Chaptarr (Settings > Media Management), or set Root Folder on the Requestrr Books page. ({error})";
+                    }
+
                     _logger.LogWarning($"Chaptarr rejected adding \"{book.Title}\": {error}");
                     return new BookRequestResult { WasSuccess = false, Error = error };
                 }
@@ -234,6 +256,28 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
                 _logger.LogError(ex, $"An error while requesting book \"{book.Title}\" from Chaptarr: {ex.Message}");
                 return new BookRequestResult { WasSuccess = false, Error = ex.Message };
             }
+        }
+
+
+        /// <summary>
+        /// The configured Root Folder when set, otherwise Chaptarr's effective default root folder for the format.
+        /// </summary>
+        private async Task<JSONRootFolder> GetRootFolderAsync(BookFormat format)
+        {
+            HttpResponseMessage response = await HttpGetAsync($"{BaseURL}/rootfolder");
+            await response.ThrowIfNotSuccessfulAsync("ChaptarrRootFolder failed", x => x.error);
+
+            List<JSONRootFolder> rootFolders = (JsonConvert.DeserializeObject<List<JSONRootFolder>>(await response.Content.ReadAsStringAsync()) ?? new List<JSONRootFolder>())
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Path))
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(Settings.RootFolder))
+            {
+                string wanted = Settings.RootFolder.Trim().TrimEnd('/', '\\');
+                return rootFolders.FirstOrDefault(x => x.Path.Trim().TrimEnd('/', '\\') == wanted);
+            }
+
+            return rootFolders.FirstOrDefault(x => format == BookFormat.Audiobook ? x.IsEffectiveDefaultAudiobook : x.IsEffectiveDefaultEbook);
         }
 
 
@@ -370,6 +414,21 @@ namespace Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr
         private class JSONEdition
         {
             public string ForeignEditionId { get; set; }
+        }
+
+        private class JSONRootFolder
+        {
+            public string Path { get; set; }
+            public bool IsEffectiveDefaultAudiobook { get; set; }
+            public bool IsEffectiveDefaultEbook { get; set; }
+            public JSONMediaTypeSettings Audiobook { get; set; }
+            public JSONMediaTypeSettings Ebook { get; set; }
+        }
+
+        private class JSONMediaTypeSettings
+        {
+            public int? QualityProfileId { get; set; }
+            public int? MetadataProfileId { get; set; }
         }
 
         private class JSONSearchResult
