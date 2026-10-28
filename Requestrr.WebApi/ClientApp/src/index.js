@@ -39,6 +39,8 @@ import OverseerrClients from './store/reducers/OverseerrClientsReducer';
 import TvShowsClients from './store/reducers/TvShowsClientsReducer';
 import LidarrClients from "./store/reducers/LidarrClientsReducer.jsx";
 import MusicClients from "./store/reducers/MusicClientsReducer.jsx";
+import ChaptarrClients from "./store/reducers/ChaptarrClientsReducer.jsx";
+import BooksClients from "./store/reducers/BooksClientsReducer.jsx";
 
 
 
@@ -70,6 +72,14 @@ function combinedMusicClientsReducer(state = {}, action) {
   }
 }
 
+function combinedBooksClientsReducer(state = {}, action) {
+  if (action.type.includes("chaptarr")) {
+    return ChaptarrClients(state, action);
+  } else {
+    return BooksClients(state, action);
+  }
+}
+
 const store = configureStore({
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
   reducer: {
@@ -77,6 +87,7 @@ const store = configureStore({
     chatClients: ChatClients,
     movies: combinedMovieClientsReducer,
     music: combinedMusicClientsReducer,
+    books: combinedBooksClientsReducer,
     tvShows: combinedTvShowsClientsReducer,
     settings: SettingsReducer
   }

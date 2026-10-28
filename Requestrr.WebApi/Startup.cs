@@ -30,6 +30,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.AspNetCore.Http.Features;
 using Requestrr.WebApi.RequestrrBot.DownloadClients.Lidarr;
+using Requestrr.WebApi.RequestrrBot.DownloadClients.Chaptarr;
+using Requestrr.WebApi.RequestrrBot.Books;
 using Requestrr.WebApi.RequestrrBot.Music;
 
 namespace Requestrr.WebApi
@@ -106,6 +108,8 @@ namespace Requestrr.WebApi
             services.AddSingleton<RadarrSettingsProvider>();
             services.AddSingleton<SonarrSettingsProvider>();
             services.AddSingleton<LidarrSettingsProvider>();
+            services.AddSingleton<BooksSettingsProvider>();
+            services.AddSingleton<ChaptarrSettingsProvider>();
             services.AddSingleton<RequestrrBot.ChatBot>();
         }
 

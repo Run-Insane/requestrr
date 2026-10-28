@@ -12,6 +12,9 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
         public string[] TvShowRoles { get; set; }
         public string[] MovieRoles { get; set; }
         public string[] MusicRoles { get; set; }
+        public string[] BookRoles { get; set; }
+        public string BooksDownloadClient { get; set; }
+        public int BooksDownloadClientConfigurationHash { get; set; }
         public string MovieDownloadClient { get; set; }
         public int MovieDownloadClientConfigurationHash { get; set; }
         public string TvShowDownloadClient { get; set; }
@@ -34,6 +37,9 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
                    TvShowRoles.SequenceEqual(settings.TvShowRoles) &&
                    MovieRoles.SequenceEqual(settings.MovieRoles) &&
                    MusicRoles.SequenceEqual(settings.MusicRoles) &&
+                   BookRoles.SequenceEqual(settings.BookRoles) &&
+                   BooksDownloadClient == settings.BooksDownloadClient &&
+                   BooksDownloadClientConfigurationHash == settings.BooksDownloadClientConfigurationHash &&
                    MovieDownloadClient == settings.MovieDownloadClient &&
                    MovieDownloadClientConfigurationHash == settings.MovieDownloadClientConfigurationHash &&
                    TvShowDownloadClient == settings.TvShowDownloadClient &&
@@ -57,6 +63,9 @@ namespace Requestrr.WebApi.RequestrrBot.ChatClients.Discord
             hash.Add(MovieRoles);
             hash.Add(TvShowRoles);
             hash.Add(MusicRoles);
+            hash.Add(BookRoles);
+            hash.Add(BooksDownloadClient);
+            hash.Add(BooksDownloadClientConfigurationHash);
             hash.Add(MovieDownloadClient);
             hash.Add(MovieDownloadClientConfigurationHash);
             hash.Add(TvShowDownloadClient);
